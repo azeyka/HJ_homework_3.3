@@ -7,11 +7,12 @@ buttons.addEventListener('click', counter);
 
 function counter(event) {
   if (event.target.id === 'increment') {
-    result.innerHTML = +result.innerHTML + 1;
+    localStorage.result++;
   } else if (event.target.id === 'decrement' && result.innerHTML > 0) {
-    result.innerHTML = +result.innerHTML - 1;
+    localStorage.result--;
   } else {
-    result.innerHTML = 0;
+    localStorage.result = 0;
   };
-  localStorage.result = +result.innerHTML;
+  
+  result.innerHTML = localStorage.result;
 };
