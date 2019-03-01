@@ -6,41 +6,47 @@ Array.from(btns).forEach((btn) => {
 
 function sendRequest(event) {
   event.preventDefault();
-  const xhr = new XMLHttpRequest();
-  xhr.addEventListener('load', onLoad);  
+  let url, form;
   
-  let form, msgPart;
   if (event.target.value === 'Войти') {
-    xhr.open('POST', 'https://neto-api.herokuapp.com/signin');
     form = document.querySelector('.sign-in-htm');
-    msgPart = ' успешно авторизован';
+    url = 'https://neto-api.herokuapp.com/signin';
   } else {
-    xhr.open('POST', 'https://neto-api.herokuapp.com/signup');
     form = document.querySelector('.sign-up-htm');
-    msgPart = ' успешно зарегистрирован';
+    url = 'https://neto-api.herokuapp.com/signup';
   };
   
-  const msgTag = form.querySelector('.error-message'),
-        data = {};
+  const msgTag = form.querySelector('.error-message');
+  
+  fetch(url, {
+    body: formToJSON(form),
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+  })
+  .then((res) => {
+    if (200 <= res.status && res.status < 300) {
+      return res;
+    };
+    throw new Error(res.statusText);
+  })
+  .then((res) => { return res.json(); })
+  .then((data) => {  
+      if ('error' in data) {
+        msgTag.innerHTML = data.message;
+      } else {
+        msgTag.innerHTML = event.target.value === 'Войти' ? `Пользователь ${data.name} успешно авторизован` 
+                                                          : `Пользователь ${data.name} успешно зарегистрирован`;
+      };
+    })
+  .catch((error) => { console.log(error) });
+};
 
+function formToJSON(form) {
+  const data = {};
   for (const [key, value] of new FormData(form)) {
     data[key] = value;
   };
-  
-  xhr.setRequestHeader('Content-Type', 'application/json');
-  xhr.send(JSON.stringify(data));
-  
-  function onLoad() {
-    let response;
-    try {
-      response = JSON.parse(xhr.response);
-    } catch (e) {
-      response = {
-        error: true,
-        message: 'Ошибка данных, попробуйте снова'
-      };
-    };
-    
-    msgTag.innerHTML = response.error ? response.message : 'Пользователь ' + response.name + msgPart;
-  };
-};
+  return JSON.stringify(data);
+}
